@@ -1,0 +1,36 @@
+<div class="file-uploader">
+  <div class="drag-drop-area" (dragover)="onDragOver($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
+    <input type="file" #fileInput [multiple]="allowMultiple" (change)="onFileSelected($event)" style="display: none;" />
+    <div class="drag-drop-text">
+      <p>Drag & Drop files here</p>
+      <p>or</p>
+      <label for="file-upload" class="file-upload-label">Choose files</label>
+    </div>
+  </div>
+
+  <ul class="file-list">
+    <li *ngFor="let fileWithProgress of filesWithProgress; let i = index" class="file-item">
+      <div class="progress-bar">
+        <div class="progress" [ngStyle]="{ width: fileWithProgress.progress + '%' }"></div>
+      </div>
+      <p>{{ fileWithProgress.progress }}% uploaded</p>
+
+      <div *ngIf="fileWithProgress.displayed" class="file-preview">
+        <img *ngIf="fileWithProgress.file.type.startsWith('image/')" [src]="fileWithProgress.preview" alt="Image Preview" />
+        <img *ngIf="fileWithProgress.file.type === 'application/pdf'" src="assets/pdf-icon.png" alt="PDF Icon" class="file-icon" />
+        <img *ngIf="fileWithProgress.file.type === 'audio/mpeg'" src="assets/mp3-file.svg" alt="MP3 Icon" class="file-icon" />
+        <img *ngIf="fileWithProgress.file.type === 'application/msword'" src="assets/ms-word-file.svg" alt="MS Word Icon" class="file-icon" />
+        <img *ngIf="fileWithProgress.file.type === 'text/plain'" src="assets/txt-file.svg" alt="Text File Icon" class="file-icon" />
+      </div>
+
+      <div *ngIf="fileWithProgress.displayed" class="file-info">
+        <div class="file-name">{{ fileWithProgress.file.name }}</div>
+      </div>
+
+      <button class="remove-file-btn" (click)="removeFile(i)">x</button>
+    </li>
+  </ul>
+
+  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="success-message" *ngIf="successMessage">{{ successMessage }}</div>
+</div>

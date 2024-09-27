@@ -1,0 +1,21 @@
+.app-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  text-align: center;
+}
+
+.file-uploader-container {
+  margin-top: 20px; 
+  text-align: center; 
+}
+
+.file-uploader-container .file-uploader {
+  margin-bottom: 20px; 
+}
+
+.file-uploader-container p {
+  margin: 20px 0; 
+}

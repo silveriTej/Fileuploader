@@ -1,0 +1,21 @@
+<div class="app-container">
+  <h1>Welcome to the File Uploader App</h1>
+
+  <div class="file-uploader-container">
+    <app-file-uploader 
+      [allowMultiple]="false" 
+      [allowedFileTypes]="['image/png', 'image/jpeg', 'application/pdf', 'audio/mpeg', 'application/msword', 'text/plain']"
+      [maxFileSize]="5 * 1024 * 1024"
+      (fileChange)="handleFileChange($event)">
+    </app-file-uploader>
+
+    <p>Multiple Uploader file</p> 
+
+    <app-file-uploader 
+      [allowMultiple]="true" 
+      [allowedFileTypes]="['image/png', 'image/jpeg', 'application/pdf', 'audio/mpeg', 'application/msword', 'text/plain']"
+      [maxFileSize]="5 * 1024 * 1024"
+      (fileChange)="handleFileChange($event)">
+    </app-file-uploader>
+  </div>
+</div>
