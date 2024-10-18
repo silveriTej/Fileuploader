@@ -69,18 +69,40 @@
 }
 
 .file-item .progress-bar {
+
   width: 100%;
   background-color: #f3f3f3;
   border-radius: 4px;
   overflow: hidden;
   height: 8px;
   margin-bottom: 8px;
+  position: relative; 
+}
+
+
+.file-item.show .progress-bar {
+  display: block; 
 }
 
 .file-item .progress {
   height: 100%;
   background-color: #007bff;
   transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  text-align: right;
+  margin-top: 5px;
+  color: #007bff; 
+}
+
+
+.progress-text-percentage {
+  font-size: 12px;
+  color: #333; 
+  margin-top: 2px; 
+  text-align: right; 
 }
 
 .file-preview {
@@ -158,7 +180,7 @@
   cursor: pointer;
   position: absolute; 
   right: 40px;
-  top: 45%; 
+  top: 20%; 
   transform: translateY(-50%); 
 }
 
@@ -179,7 +201,6 @@
   width: 2px;
   height: 12px; 
 }
-
 
 .audio-remove-icon::before {
   transform: rotate(45deg);

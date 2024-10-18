@@ -10,10 +10,10 @@
 
   <ul class="file-list">
     <li *ngFor="let fileWithProgress of filesWithProgress; let i = index" class="file-item">
-      <div class="progress-bar">
+      <div class="progress-bar" *ngIf="!fileWithProgress.hideProgressBar">
         <div class="progress" [ngStyle]="{ width: fileWithProgress.progress + '%' }"></div>
       </div>
-      <p>{{ fileWithProgress.progress }}% uploaded</p>
+      <p *ngIf="!fileWithProgress.hideProgressBar">{{ fileWithProgress.progress }}% uploaded</p>
 
       <div *ngIf="fileWithProgress.displayed" class="file-preview">
         <img *ngIf="fileWithProgress.file.type.startsWith('image/')" [src]="fileWithProgress.preview" alt="Image Preview" />

@@ -1,12 +1,12 @@
 import { Component, EventEmitter, Input, Output, ViewChild, ElementRef } from '@angular/core';
-import { HttpClient, HttpEventType } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
 interface FileWithProgress {
   file: File;
   progress: number;
   preview: string | ArrayBuffer | null;
-  displayed: boolean;
+  displayed: boolean; // Track whether to display the file item
+  hideProgressBar: boolean; // Flag to hide progress bar after display
 }
 
 @Component({
@@ -23,22 +23,20 @@ export class FileUploaderComponent {
     'image/jpeg',
     'application/pdf',
     'audio/mpeg',
-    'audio/wav', 
+    'audio/wav',
     'video/mp4',
     'application/msword',
     'text/plain',
   ];
   @Input() maxFileSize: number = 5 * 1024 * 1024;
 
-  @Output() fileChange = new EventEmitter<any>();
+  @Output() fileChange = new EventEmitter<FileWithProgress[]>(); 
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   filesWithProgress: FileWithProgress[] = [];
   errorMessage: string = '';
   successMessage: string = '';
-
-  constructor(private http: HttpClient) {}
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -61,25 +59,41 @@ export class FileUploaderComponent {
       } else if (this.validateFile(file)) {
         const fileWithProgress: FileWithProgress = {
           file,
-          progress: 0,
-          preview: this.generatePreview(file),
-          displayed: false,
+          progress: 0, // Start with 0% progress
+          preview: null,
+          displayed: false, // Initially not displayed
+          hideProgressBar: false, // Progress bar visibility flag
         };
+
+        // Simulate file upload progress
+        this.simulateFileUpload(fileWithProgress)
+          .then(() => {
+            fileWithProgress.progress = 100; // Set progress to 100%
+            return this.generatePreview(file);
+          })
+          .then(preview => {
+            fileWithProgress.preview = preview;
+            fileWithProgress.displayed = true; // Display the file after upload
+            fileWithProgress.hideProgressBar = true; // Hide progress bar after displaying
+
+            // Emit updated file list after progress bar is hidden
+            this.fileChange.emit(this.filesWithProgress);
+
+            // You can set a timeout if needed to remove the progress bar after some time
+            setTimeout(() => {
+              this.fileChange.emit(this.filesWithProgress); // Emit again if needed
+            }, 1000); // Adjust time to your preference
+          });
+
         this.filesWithProgress.push(fileWithProgress);
         newFiles.push(fileWithProgress);
-        this.uploadFile(fileWithProgress);
       } else {
         this.errorMessage = 'File validation failed!';
       }
     });
 
     if (newFiles.length > 0) {
-      if (this.allowMultiple) {
-        this.fileChange.emit(this.filesWithProgress);
-      } else {
-        const singleFile = this.filesWithProgress[0];
-        this.fileChange.emit(singleFile.file);
-      }
+      this.fileChange.emit(this.filesWithProgress); 
     }
 
     this.fileInput.nativeElement.value = '';
@@ -101,42 +115,32 @@ export class FileUploaderComponent {
     return true;
   }
 
-  generatePreview(file: File): string | ArrayBuffer | null {
-    const url = URL.createObjectURL(file);
-
-    if (file.type.startsWith('image/')) {
-      return url;
-    } else if (file.type.startsWith('audio/')) {
-      return url; 
-    } else if (file.type.startsWith('video/')) {
-      return url;
-    }
-
-    return null;
+  async simulateFileUpload(fileWithProgress: FileWithProgress): Promise<void> {
+    return new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (fileWithProgress.progress < 100) {
+          fileWithProgress.progress += 20; // Simulate progress (adjust as needed)
+        } else {
+          clearInterval(interval);
+          resolve(); // Resolve when progress reaches 100%
+        }
+      }, 200); // Adjust interval timing as needed
+    });
   }
 
-  uploadFile(fileWithProgress: FileWithProgress): void {
-    const formData = new FormData();
-    formData.append('file', fileWithProgress.file, fileWithProgress.file.name);
-
-    this.http.post('http://localhost:3000/api/upload', formData, {
-      reportProgress: true,
-      observe: 'events'
-    }).subscribe(event => {
-      if (event.type === HttpEventType.UploadProgress) {
-        if (event.total) {
-          fileWithProgress.progress = Math.round((100 * event.loaded) / event.total);
-        }
-      } else if (event.type === HttpEventType.Response) {
-        fileWithProgress.displayed = true;
-        this.successMessage = 'File uploaded successfully!';
-        this.fileChange.emit(this.filesWithProgress);
-        setTimeout(() => {
-          this.successMessage = '';
-        }, 2000);
+  async generatePreview(file: File): Promise<string | ArrayBuffer | null> {
+    return new Promise((resolve) => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      } else if (file.type === 'application/pdf' || file.type === 'text/plain') {
+        resolve(URL.createObjectURL(file));
+      } else if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
+        resolve(URL.createObjectURL(file));
+      } else {
+        resolve(null);
       }
-    }, error => {
-      this.errorMessage = 'Upload failed!';
     });
   }
 
@@ -162,6 +166,6 @@ export class FileUploaderComponent {
       this.fileInput.nativeElement.value = '';
     }
 
-    this.fileChange.emit(this.filesWithProgress);
+    this.fileChange.emit(this.filesWithProgress); 
   }
 }
