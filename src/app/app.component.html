@@ -2,18 +2,20 @@
   <h1>Welcome to the File Uploader App</h1>
 
   <div class="file-uploader-container">
+    <!-- Single file uploader -->
     <app-file-uploader 
       [allowMultiple]="false" 
-      [allowedFileTypes]="['image/png', 'image/jpeg', 'application/pdf', 'audio/mpeg', 'application/msword', 'text/plain']"
+      [allowedFileTypes]="['image/png', 'image/jpeg', 'application/pdf', 'audio/mpeg', 'audio/wav', 'application/msword', 'text/plain']"
       [maxFileSize]="5 * 1024 * 1024"
       (fileChange)="handleFileChange($event)">
     </app-file-uploader>
 
-    <p>Multiple Uploader file</p> 
+    <p>Multiple file uploader</p> 
 
+    <!-- Multiple file uploader -->
     <app-file-uploader 
       [allowMultiple]="true" 
-      [allowedFileTypes]="['image/png', 'image/jpeg', 'application/pdf', 'audio/mpeg', 'application/msword', 'text/plain']"
+      [allowedFileTypes]="['image/png', 'image/jpeg', 'application/pdf', 'audio/mpeg', 'audio/wav', 'application/msword', 'text/plain']"
       [maxFileSize]="5 * 1024 * 1024"
       (fileChange)="handleFileChange($event)">
     </app-file-uploader>

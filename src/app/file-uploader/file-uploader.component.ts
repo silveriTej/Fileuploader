@@ -18,10 +18,19 @@ interface FileWithProgress {
 })
 export class FileUploaderComponent {
   @Input() allowMultiple: boolean = false;
-  @Input() allowedFileTypes: string[] = ['image/png', 'image/jpeg', 'application/pdf', 'audio/mpeg', 'application/msword', 'text/plain'];
-  @Input() maxFileSize: number = 5 * 1024 * 1024; 
+  @Input() allowedFileTypes: string[] = [
+    'image/png',
+    'image/jpeg',
+    'application/pdf',
+    'audio/mpeg',
+    'audio/wav', 
+    'video/mp4',
+    'application/msword',
+    'text/plain',
+  ];
+  @Input() maxFileSize: number = 5 * 1024 * 1024;
 
-  @Output() fileChange = new EventEmitter<any>(); 
+  @Output() fileChange = new EventEmitter<any>();
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -34,18 +43,18 @@ export class FileUploaderComponent {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const selectedFiles = input.files;
-  
+
     if (!selectedFiles || selectedFiles.length === 0) return;
-  
+
     this.errorMessage = '';
     this.successMessage = '';
-  
+
     const newFiles: FileWithProgress[] = [];
-  
+
     if (!this.allowMultiple) {
       this.filesWithProgress = [];
     }
-  
+
     Array.from(selectedFiles).forEach((file) => {
       if (this.isDuplicate(file)) {
         this.errorMessage = `File "${file.name}" already uploaded!`;
@@ -63,18 +72,16 @@ export class FileUploaderComponent {
         this.errorMessage = 'File validation failed!';
       }
     });
-  
+
     if (newFiles.length > 0) {
       if (this.allowMultiple) {
-        console.log('Emitting multiple files to parent component:', this.filesWithProgress);
-        this.fileChange.emit(this.filesWithProgress); 
+        this.fileChange.emit(this.filesWithProgress);
       } else {
         const singleFile = this.filesWithProgress[0];
-        console.log('Emitting single file to parent component:', singleFile.file);
         this.fileChange.emit(singleFile.file);
       }
     }
-  
+
     this.fileInput.nativeElement.value = '';
   }
 
@@ -95,16 +102,16 @@ export class FileUploaderComponent {
   }
 
   generatePreview(file: File): string | ArrayBuffer | null {
+    const url = URL.createObjectURL(file);
+
     if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const fileWithProgress = this.filesWithProgress.find(f => f.file === file);
-        if (fileWithProgress) {
-          fileWithProgress.preview = reader.result;
-        }
-      };
+      return url;
+    } else if (file.type.startsWith('audio/')) {
+      return url; 
+    } else if (file.type.startsWith('video/')) {
+      return url;
     }
+
     return null;
   }
 
@@ -123,22 +130,13 @@ export class FileUploaderComponent {
       } else if (event.type === HttpEventType.Response) {
         fileWithProgress.displayed = true;
         this.successMessage = 'File uploaded successfully!';
-
-        if (this.allowMultiple) {
-          console.log('Emitting multiple files to parent component after upload:', this.filesWithProgress);
-          this.fileChange.emit(this.filesWithProgress); 
-        } else {
-          console.log('Emitting single file to parent component after upload:', this.filesWithProgress[0].file);
-          this.fileChange.emit(this.filesWithProgress[0].file);
-        }
-
+        this.fileChange.emit(this.filesWithProgress);
         setTimeout(() => {
           this.successMessage = '';
         }, 2000);
       }
     }, error => {
       this.errorMessage = 'Upload failed!';
-      console.error('Upload failed:', error);
     });
   }
 

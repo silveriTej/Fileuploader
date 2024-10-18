@@ -18,16 +18,36 @@
       <div *ngIf="fileWithProgress.displayed" class="file-preview">
         <img *ngIf="fileWithProgress.file.type.startsWith('image/')" [src]="fileWithProgress.preview" alt="Image Preview" />
         <img *ngIf="fileWithProgress.file.type === 'application/pdf'" src="assets/pdf-icon.png" alt="PDF Icon" class="file-icon" />
-        <img *ngIf="fileWithProgress.file.type === 'audio/mpeg'" src="assets/mp3-file.svg" alt="MP3 Icon" class="file-icon" />
+
+        <div *ngIf="fileWithProgress.file.type.startsWith('audio/')" class="audio-preview-box">
+          <div *ngIf="fileWithProgress.file.type === 'audio/mpeg'" class="audio-preview">
+            <img src="assets/mp3-file.svg" alt="MP3 Icon" class="file-icon" />
+            <audio [src]="fileWithProgress.preview" controls class="audio-player"></audio>
+          </div>
+
+          <div *ngIf="fileWithProgress.file.type === 'audio/wav'" class="audio-preview">
+            <img src="assets/wav-.svg" alt="WAV Icon" class="file-icon" />
+            <audio [src]="fileWithProgress.preview" controls class="audio-player"></audio>
+          </div>
+        </div>
+
+        <div *ngIf="fileWithProgress.file.type.startsWith('video/')" class="video-preview">
+          <video [src]="fileWithProgress.preview" controls class="video-player"></video>
+        </div>
+
         <img *ngIf="fileWithProgress.file.type === 'application/msword'" src="assets/ms-word-file.svg" alt="MS Word Icon" class="file-icon" />
         <img *ngIf="fileWithProgress.file.type === 'text/plain'" src="assets/txt-file.svg" alt="Text File Icon" class="file-icon" />
       </div>
 
       <div *ngIf="fileWithProgress.displayed" class="file-info">
         <div class="file-name">{{ fileWithProgress.file.name }}</div>
+        <ng-container *ngIf="!fileWithProgress.file.type.startsWith('audio/')">
+          <button class="remove-file-btn" (click)="removeFile(i)">x</button>
+        </ng-container>
+        <ng-container *ngIf="fileWithProgress.file.type.startsWith('audio/')">
+          <div class="audio-remove-icon" (click)="removeFile(i)"></div>
+        </ng-container>
       </div>
-
-      <button class="remove-file-btn" (click)="removeFile(i)">x</button>
     </li>
   </ul>
 
