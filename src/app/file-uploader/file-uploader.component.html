@@ -1,6 +1,20 @@
 <div class="file-uploader">
-  <div class="drag-drop-area" (dragover)="onDragOver($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
-    <input type="file" #fileInput [multiple]="allowMultiple" (change)="onFileSelected($event)" style="display: none;" />
+  <div 
+    class="drag-drop-area" 
+    (dragover)="onDragOver($event)" 
+    (drop)="onDrop($event)" 
+    (click)="fileInput.click()"
+    role="button" 
+    aria-label="Upload Files"
+  >
+    <input 
+      type="file" 
+      #fileInput 
+      [multiple]="allowMultiple" 
+      (change)="onFileSelected($event)" 
+      style="display: none;" 
+      aria-hidden="true"
+    />
     <div class="drag-drop-text">
       <p>Drag & Drop files here</p>
       <p>or</p>
@@ -16,37 +30,56 @@
       <p *ngIf="!fileWithProgress.hideProgressBar">{{ fileWithProgress.progress }}% uploaded</p>
 
       <div *ngIf="fileWithProgress.displayed" class="file-preview">
-        <img *ngIf="fileWithProgress.file.type.startsWith('image/')" [src]="fileWithProgress.preview" alt="Image Preview" />
-        <img *ngIf="fileWithProgress.file.type === 'application/pdf'" src="assets/pdf-icon.png" alt="PDF Icon" class="file-icon" />
+        <!-- Image Preview Box -->
+        <div *ngIf="fileWithProgress.file.type.startsWith('image/')" class="image-preview-box">
+          <img [src]="fileWithProgress.preview" alt="Image Preview" class="image-preview" />
+          <div class="file-info">{{ fileWithProgress.file.name }}</div>
+          <div class="remove-file-icon" (click)="removeFile(i)" aria-label="Remove File"></div>
+        </div>
 
+        <!-- PDF File Preview -->
+        <div *ngIf="fileWithProgress.file.type === 'application/pdf'" class="pdf-preview-box">
+          <img src="assets/pdf-icon.png" alt="PDF Icon" class="file-icon" />
+          <div class="file-info">{{ fileWithProgress.file.name }}</div>
+          <embed [src]="fileWithProgress.preview" type="application/pdf" width="100%" height="100%" />
+          <div class="remove-file-icon" (click)="removeFile(i)" aria-label="Remove File"></div>
+        </div>
+
+        <!-- Word File Preview -->
+        <div *ngIf="fileWithProgress.file.type === 'application/msword'" class="word-preview-box">
+          <img src="assets/ms-word-file.svg" alt="MS Word Icon" class="file-icon" />
+          <div class="file-info">{{ fileWithProgress.file.name }}</div>
+          <iframe [src]="fileWithProgress.preview" width="100%" height="100%"></iframe>
+          <div class="remove-file-icon" (click)="removeFile(i)" aria-label="Remove File"></div>
+        </div>
+
+        <!-- Text File Preview -->
+        <div *ngIf="fileWithProgress.file.type === 'text/plain'" class="text-preview-box">
+          <img src="assets/txt-file.svg" alt="Text File Icon" class="file-icon" />
+          <div class="file-info">{{ fileWithProgress.file.name }}</div>
+          <pre class="file-content">{{ fileWithProgress.content }}</pre>
+          <div class="remove-file-icon" (click)="removeFile(i)" aria-label="Remove File"></div>
+        </div>
+
+        <!-- Audio File Preview -->
         <div *ngIf="fileWithProgress.file.type.startsWith('audio/')" class="audio-preview-box">
-          <div *ngIf="fileWithProgress.file.type === 'audio/mpeg'" class="audio-preview">
-            <img src="assets/mp3-file.svg" alt="MP3 Icon" class="file-icon" />
-            <audio [src]="fileWithProgress.preview" controls class="audio-player"></audio>
-          </div>
-
-          <div *ngIf="fileWithProgress.file.type === 'audio/wav'" class="audio-preview">
-            <img src="assets/wav-.svg" alt="WAV Icon" class="file-icon" />
-            <audio [src]="fileWithProgress.preview" controls class="audio-player"></audio>
-          </div>
+          <img src="assets/wav-.svg" alt="Audio Icon" class="file-icon" />
+          <audio [src]="fileWithProgress.preview" controls class="audio-player"></audio>
+          <div class="file-info">{{ fileWithProgress.file.name }}</div>
+          <div class="remove-file-icon" (click)="removeFile(i)" aria-label="Remove File"></div>
         </div>
 
-        <div *ngIf="fileWithProgress.file.type.startsWith('video/')" class="video-preview">
-          <video [src]="fileWithProgress.preview" controls class="video-player"></video>
+        <!-- Video File Preview -->
+        <div *ngIf="fileWithProgress.file.type.startsWith('video/')" class="video-preview-box">
+          <video [src]="fileWithProgress.preview" controls class="video-player" width="100%" height="100%"></video>
+          <div class="file-info">{{ fileWithProgress.file.name }}</div>
+          <div class="remove-file-icon" (click)="removeFile(i)" aria-label="Remove File"></div>
         </div>
-
-        <img *ngIf="fileWithProgress.file.type === 'application/msword'" src="assets/ms-word-file.svg" alt="MS Word Icon" class="file-icon" />
-        <img *ngIf="fileWithProgress.file.type === 'text/plain'" src="assets/txt-file.svg" alt="Text File Icon" class="file-icon" />
       </div>
 
       <div *ngIf="fileWithProgress.displayed" class="file-info">
         <div class="file-name">{{ fileWithProgress.file.name }}</div>
-        <ng-container *ngIf="!fileWithProgress.file.type.startsWith('audio/')">
-          <button class="remove-file-btn" (click)="removeFile(i)">x</button>
-        </ng-container>
-        <ng-container *ngIf="fileWithProgress.file.type.startsWith('audio/')">
-          <div class="audio-remove-icon" (click)="removeFile(i)"></div>
-        </ng-container>
+        <div class="remove-file-btn" (click)="removeFile(i)" aria-label="Remove File">Remove</div>
       </div>
     </li>
   </ul>

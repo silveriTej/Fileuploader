@@ -5,8 +5,9 @@ interface FileWithProgress {
   file: File;
   progress: number;
   preview: string | ArrayBuffer | null;
-  displayed: boolean; // Track whether to display the file item
-  hideProgressBar: boolean; // Flag to hide progress bar after display
+  displayed: boolean; 
+  hideProgressBar: boolean; 
+  content?: string; 
 }
 
 @Component({
@@ -56,39 +57,45 @@ export class FileUploaderComponent {
     Array.from(selectedFiles).forEach((file) => {
       if (this.isDuplicate(file)) {
         this.errorMessage = `File "${file.name}" already uploaded!`;
-      } else if (this.validateFile(file)) {
-        const fileWithProgress: FileWithProgress = {
-          file,
-          progress: 0, // Start with 0% progress
-          preview: null,
-          displayed: false, // Initially not displayed
-          hideProgressBar: false, // Progress bar visibility flag
-        };
-
-        // Simulate file upload progress
-        this.simulateFileUpload(fileWithProgress)
-          .then(() => {
-            fileWithProgress.progress = 100; // Set progress to 100%
-            return this.generatePreview(file);
-          })
-          .then(preview => {
-            fileWithProgress.preview = preview;
-            fileWithProgress.displayed = true; // Display the file after upload
-            fileWithProgress.hideProgressBar = true; // Hide progress bar after displaying
-
-            // Emit updated file list after progress bar is hidden
-            this.fileChange.emit(this.filesWithProgress);
-
-            // You can set a timeout if needed to remove the progress bar after some time
-            setTimeout(() => {
-              this.fileChange.emit(this.filesWithProgress); // Emit again if needed
-            }, 1000); // Adjust time to your preference
-          });
-
-        this.filesWithProgress.push(fileWithProgress);
-        newFiles.push(fileWithProgress);
+        this.clearMessages();
       } else {
-        this.errorMessage = 'File validation failed!';
+        const validation = this.validateFile(file);
+        if (validation.isValid) {
+          const fileWithProgress: FileWithProgress = {
+            file,
+            progress: 0, 
+            preview: null,
+            displayed: false, 
+            hideProgressBar: false,
+          };
+
+          this.simulateFileUpload(fileWithProgress)
+            .then(() => {
+              fileWithProgress.progress = 100;
+              return this.generatePreview(file);
+            })
+            .then(preview => {
+              fileWithProgress.preview = preview;
+              fileWithProgress.displayed = true; 
+              fileWithProgress.hideProgressBar = true; 
+
+        
+              this.successMessage = `File "${file.name}" uploaded successfully!`;
+              this.clearMessages(); 
+
+     
+              this.fileChange.emit(this.filesWithProgress);
+            });
+
+          this.filesWithProgress.push(fileWithProgress);
+          newFiles.push(fileWithProgress);
+        } else {
+      
+          if (validation.errorMessage) {
+            this.errorMessage = validation.errorMessage; 
+            this.clearMessages(); 
+          }
+        }
       }
     });
 
@@ -103,28 +110,32 @@ export class FileUploaderComponent {
     return this.filesWithProgress.some((existingFile) => existingFile.file.name === file.name);
   }
 
-  validateFile(file: File): boolean {
+  validateFile(file: File): { isValid: boolean; errorMessage?: string } {
     if (!this.allowedFileTypes.includes(file.type)) {
-      this.errorMessage = 'Unsupported file type!';
-      return false;
+      return {
+        isValid: false,
+        errorMessage: 'Unsupported file type! Please upload a PNG, JPEG, PDF, MP3, WAV, MP4, DOC, or TXT file.'
+      };
     }
     if (file.size > this.maxFileSize) {
-      this.errorMessage = `File size exceeds the maximum limit of ${this.maxFileSize / (1024 * 1024)} MB!`;
-      return false;
+      return {
+        isValid: false,
+        errorMessage: `File size exceeds the maximum limit of ${this.maxFileSize / (1024 * 1024)} MB!`
+      };
     }
-    return true;
+    return { isValid: true };
   }
 
   async simulateFileUpload(fileWithProgress: FileWithProgress): Promise<void> {
     return new Promise((resolve) => {
       const interval = setInterval(() => {
         if (fileWithProgress.progress < 100) {
-          fileWithProgress.progress += 20; // Simulate progress (adjust as needed)
+          fileWithProgress.progress += 20; 
         } else {
           clearInterval(interval);
-          resolve(); // Resolve when progress reaches 100%
+          resolve(); 
         }
-      }, 200); // Adjust interval timing as needed
+      }, 200); 
     });
   }
 
@@ -135,7 +146,15 @@ export class FileUploaderComponent {
         reader.onload = () => resolve(reader.result);
         reader.readAsDataURL(file);
       } else if (file.type === 'application/pdf' || file.type === 'text/plain') {
-        resolve(URL.createObjectURL(file));
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (file.type === 'text/plain') {
+         
+            this.filesWithProgress.find(f => f.file.name === file.name)!.content = reader.result as string;
+          }
+          resolve(URL.createObjectURL(file));
+        };
+        reader.readAsArrayBuffer(file);
       } else if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
         resolve(URL.createObjectURL(file));
       } else {
@@ -161,11 +180,16 @@ export class FileUploaderComponent {
 
   removeFile(index: number): void {
     this.filesWithProgress.splice(index, 1);
-
     if (!this.allowMultiple && this.filesWithProgress.length === 0) {
       this.fileInput.nativeElement.value = '';
     }
-
     this.fileChange.emit(this.filesWithProgress); 
+  }
+
+  clearMessages(): void {
+    setTimeout(() => {
+      this.successMessage = '';
+      this.errorMessage = '';
+    }, 1000);
   }
 }
